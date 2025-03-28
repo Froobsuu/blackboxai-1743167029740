@@ -1,15 +1,15 @@
 class LoadingWindowManager {
     constructor() {
         this.windows = [];
-        this.availableHours = [
-            '06:00', '07:00', '08:00', '09:00', 
-            '10:30', '11:00', '12:00', '13:00', 
-            '14:00', '15:00', '16:00', '17:00',
-            '18:30', '19:00', '20:00', '21:00'
+        this.workingHours = [
+            '06:00-07:00', '07:00-08:00', '08:00-09:00', '09:00-10:00',
+            '10:30-11:30', '11:00-12:00', '12:00-13:00', '13:00-14:00',
+            '14:00-15:00', '15:00-16:00', '16:00-17:00', '17:00-18:00',
+            '18:30-19:30', '19:00-20:00', '20:00-21:00'
         ];
-        this.capacity = {
-            fullTruck: 2,
-            smallTruck: 1,
+        this.slotCapacity = {
+            maxFullTrucks: 2,
+            maxSmallTrucks: 1,
             fullTruckPallets: 33,
             smallTruckPallets: 15
         };
