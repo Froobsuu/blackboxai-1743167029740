@@ -140,64 +140,40 @@ class LoadingWindowManager {
         return `${endHours.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`;
     }
 
-    renderWindowsList() {
-        const container = document.getElementById('windows-container');
+    renderCalendarView() {
+        const container = document.getElementById('calendar-view');
         if (!container) return;
 
-        // Sprawdź które godziny są już zarezerwowane
-        const reservedHours = this.windows.map(w => w.startTime);
-        
-        container.innerHTML = `
-            <div class="mb-4">
-                <h4 class="text-center mb-4">Dostępne okna załadunkowe</h4>
-                <div class="row g-3">
-                    ${this.availableHours.map(hour => {
-                        const isReserved = reservedHours.includes(hour);
-                        return `
-                        <div class="col-md-3">
-                            <div class="card ${isReserved ? 'border-danger' : 'border-success'} h-100">
-                                <div class="card-body d-flex flex-column">
-                                    <h5 class="card-title text-center">${hour}</h5>
-                                    <div class="card-text mb-3">
-                                        <div class="d-flex justify-content-between">
-                                            <span>Pełne auta:</span>
-                                            <strong>${this.capacity.fullTruck} × 33 palety</strong>
-                                        </div>
-                                        <div class="d-flex justify-content-between">
-                                            <span>Małe auta:</span>
-                                            <strong>${this.capacity.smallTruck} × 15 palet</strong>
-                                        </div>
-                                    </div>
-                                    <button class="btn btn-sm mt-auto ${isReserved ? 'btn-outline-secondary disabled' : 'btn-primary'}" 
-                                            data-hour="${hour}"
-                                            ${isReserved ? 'disabled' : ''}>
-                                        ${isReserved ? 'Zarezerwowane' : 'Dodaj rezerwację'}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>`;
-                    }).join('')}
-                </div>
-            </div>
-            <div class="mb-4">
-                <h4>Aktywne rezerwacje</h4>
-                ${this.windows.map(window => `
-                    <div class="card mb-3">
-                        <div class="card-body">
-                            <h5 class="card-title">Rezerwacja #${window.id}</h5>
-                            <p class="card-text">
-                                <strong>Godzina:</strong> ${window.startTime}<br>
-                                <strong>Pozostała pojemność:</strong><br>
-                                - ${window.capacity.remainingFull} z ${window.capacity.fullTruck} pełnych aut (33 palety)<br>
-                                - ${window.capacity.remainingSmall} z ${window.capacity.smallTruck} małych aut (15 palet)
-                            </p>
-                            <button class="btn btn-sm btn-outline-primary edit-window" data-id="${window.id}">Edytuj</button>
-                            <button class="btn btn-sm btn-outline-danger delete-window" data-id="${window.id}">Usuń</button>
-                        </div>
+        container.innerHTML = this.workingHours.map(slot => {
+            const [start, end] = slot.split('-');
+            const reservations = this.windows.filter(w => w.timeSlot === slot);
+            const fullTrucksReserved = reservations.reduce((sum, w) => sum + w.fullTrucks, 0);
+            const smallTrucksReserved = reservations.reduce((sum, w) => sum + w.smallTrucks, 0);
+            
+            const fullAvailable = this.slotCapacity.maxFullTrucks - fullTrucksReserved;
+            const smallAvailable = this.slotCapacity.maxSmallTrucks - smallTrucksReserved;
+
+            return `
+            <div class="col-md-4">
+                <div class="time-slot">
+                    <div class="slot-header">${start} - ${end}</div>
+                    <div class="slot-availability">
+                        Dostępne miejsca:<br>
+                        - ${fullAvailable} z ${this.slotCapacity.maxFullTrucks} pełnych aut (33 palety)<br>
+                        - ${smallAvailable} z ${this.slotCapacity.maxSmallTrucks} małych aut (15 palet)
                     </div>
-                `).join('')}
-            </div>
-        `;
+                    <button class="btn btn-sm btn-primary mt-2 add-reservation" 
+                            data-slot="${slot}"
+                            ${fullAvailable <= 0 && smallAvailable <= 0 ? 'disabled' : ''}>
+                        Dodaj rezerwację
+                    </button>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    renderWindowsList() {
+        this.renderCalendarView();
 
         // Dodaj obsługę przycisków dodawania rezerwacji
         document.querySelectorAll('.add-specific-hour').forEach(btn => {
